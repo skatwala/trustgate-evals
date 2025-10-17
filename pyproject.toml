@@ -1,0 +1,23 @@
+[project]
+name = "trustgate-evals"
+version = "0.2.0"
+description = "Evaluation harness for TrustGate (WER, CER, intent classification, model comparisons)"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "jiwer",
+    "pytest",
+    "transformers",
+    "torch",
+    "notebook",
+    "matplotlib",
+    "seaborn"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
