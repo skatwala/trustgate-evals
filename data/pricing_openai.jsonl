@@ -1,0 +1,6 @@
+{
+  "gpt-4o-mini": {
+    "input_token_cost": 0.00000015,
+    "output_token_cost": 0.00000060
+  }
+}

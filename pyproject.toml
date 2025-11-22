@@ -16,7 +16,8 @@ dependencies = [
     "torch",
     "notebook",
     "matplotlib",
-    "seaborn"
+    "seaborn",
+    "python-levenshtein>=0.27.3",
 ]
 
 [tool.pytest.ini_options]

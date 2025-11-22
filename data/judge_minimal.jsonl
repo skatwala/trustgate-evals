@@ -1,0 +1,1 @@
+{"id":"judge_001","prompt":"What is FastAPI?","reference":"A modern Python web framework for building APIs using async and type hints.","candidate":"FastAPI is a Python API library that is fast.","max_score":10}
