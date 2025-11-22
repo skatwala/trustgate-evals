@@ -42,25 +42,29 @@ This elevates the work from *“evaluation scripts”* → *“platform-level go
 
 ```mermaid
 flowchart TD
-
     A[Enterprise Applications] --> B[TrustGate Evaluation Layer]
 
-    B --> C1[Quality Evaluators
-WER, Intent, Fact Extraction]
-    B --> C2[Safety Evaluators
-Prompt Injection, Leakage]
-    B --> C3[Bias & Fairness]
-    B --> C4[LLM-as-Judge]
-    B --> C5[Usage & Cost Governance]
+    B --> Q[Quality Evaluators]
+    B --> S[Safety Evaluators]
+    B --> F[Fairness Evaluators]
+    B --> J[LLM as Judge]
+    B --> U[Usage and Cost Governance]
 
-    C1 --> D[Model Client
-(OpenAI/Azure/Anthropic/vLLM)]
-    C2 --> D
-    C3 --> D
-    C4 --> D
-    C5 --> D
+    Q --> M[Model Client]
+    S --> M
+    F --> M
+    J --> M
+    U --> M
 
-    D --> E[LLM Provider]
+    M --> OAI[OpenAI]
+    M --> AZ[Azure OpenAI]
+    M --> AN[Anthropic]
+    M --> LOCAL[Local vLLM]
+
+    OAI --> P[LLM Provider]
+    AZ --> P
+    AN --> P
+    LOCAL --> P
 ```
 
 ### Strategic positioning:
