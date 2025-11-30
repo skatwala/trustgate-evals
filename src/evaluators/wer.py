@@ -6,6 +6,9 @@ Usage:
 """
 
 import argparse, json, os
+from pathlib import Path
+
+from .eval_writer import EvaluationRecord, append_evaluations
 from jiwer import wer
 
 # Optional: some JiWER versions removed compute_measures
@@ -88,15 +91,35 @@ def evaluate_stt(pred_file: str, ref_file: str):
 
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--pred", default="data/pred.txt")
-    ap.add_argument("--ref", default="data/ref.txt")
-    args = ap.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--pred", default="data/pred.txt")
+    parser.add_argument("--ref", default="data/ref.txt")
+    parser.add_argument("--no-write-json", action="store_true")
+    args = parser.parse_args()
 
-    os.makedirs("data", exist_ok=True)
-    if not os.path.exists(args.ref):
-        open(args.ref, "w", encoding="utf-8").write("hello world\n")
-    if not os.path.exists(args.pred):
-        open(args.pred, "w", encoding="utf-8").write("hello word\n")
+    if not Path(args.pred).exists():
+        print(f"Error: Prediction file '{args.pred}' not found.")
+        exit(1)
+    if not Path(args.ref).exists():
+        print(f"Error: Reference file '{args.ref}' not found.")
+        exit(1)
 
-    evaluate_stt(args.pred, args.ref)
+    results = evaluate_stt(args.pred, args.ref)
+
+    # -------- NEW: write to evaluations.json --------
+    if not args.no_write_json:
+        record = EvaluationRecord(
+            eval_type="wer",
+            name="stt_wer",
+            dataset=f"ref={args.ref},pred={args.pred}",
+            metrics={
+                "avg_wer": float(results["avg_wer"]),
+                "avg_cer": float(results["avg_cer"]),
+            },
+            num_examples=len(results["wer_scores"]),
+            tags=["stt"],
+            notes="JiWER-based WER/CER",
+        )
+
+        append_evaluations([record])
+

@@ -254,3 +254,106 @@ This ensures:
 
 MIT License  
 Safe for enterprise adoption.
+
+# 🛠 Developer Notes – Running Locally
+
+TrustGate evaluators are implemented as Python modules under `src/`, and several evaluators write unified results to `results/evaluations.json`.  
+To run any evaluator locally, your environment must include `src/` on the Python module path.
+
+## 1. Configure PYTHONPATH
+
+### Windows PowerShell
+```powershell
+$env:PYTHONPATH = "$(Get-Location)\src"
+```
+
+### macOS / Linux
+```bash
+export PYTHONPATH="$(pwd)/src"
+```
+
+Run this once per terminal session before running evaluators.
+
+---
+
+## 2. Running Evaluators
+
+### Intent Classification
+```bash
+python -m evaluators.intent_eval --data data/sample_intents.json
+```
+
+### WER / CER (Speech-to-Text Accuracy)
+```bash
+python -m evaluators.wer --pred data/pred.txt --ref data/ref.txt
+```
+
+### Prompt Injection / Safety Evaluation
+```bash
+python -m evaluators.prompt_injection_eval --data data/prompt_injection.jsonl
+```
+
+### Bias / Fact / Judge / Usage Evaluators
+(Exact dataset paths may vary.)
+```bash
+python -m evaluators.bias_eval
+python -m evaluators.fact_eval
+python -m evaluators.judge_eval
+python -m evaluators.usage_eval
+```
+
+---
+
+## 3. Unified Evaluation Output
+
+All evaluators can append structured results to:
+
+```
+results/evaluations.json
+```
+
+Each record follows an `EvaluationRecord` schema containing:
+
+- evaluation type (`intent`, `wer`, `bias`, `safety`, etc.)
+- dataset reference
+- computed metrics (accuracy, macro-F1, WER/CER, etc.)
+- optional thresholds and pass/fail flags
+- notes, tags, metadata
+- number of examples
+
+This file is consumed by the AI Governance Framework for:
+
+- scorecards  
+- compliance reporting  
+- release gates  
+- audit evidence  
+
+---
+
+## 4. Output Artifacts
+
+Running an evaluator generates files under `results/`, such as:
+
+```
+results/
+├── intent_eval.json
+├── intent_eval.csv
+├── class_metrics.png
+├── confusion_matrix.png
+└── evaluations.json   ← unified governance output
+```
+
+These artifacts provide offline evaluation evidence and may be committed (excluding large image files).
+
+---
+
+## 5. Running Tests
+
+All tests run offline using mocks:
+
+```bash
+pytest -q
+# or
+uv run pytest -q
+```
+

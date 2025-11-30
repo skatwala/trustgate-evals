@@ -4,6 +4,8 @@ import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+from .eval_writer import EvaluationRecord, append_evaluations
+
 from sklearn.metrics import classification_report, confusion_matrix
 
 def evaluate_intents(data_file: str, results_dir: str = "results") -> dict:
@@ -67,3 +69,28 @@ if __name__ == "__main__":
 
     plot_confusion_matrix(results["confusion_matrix"], results["labels"])
     plot_metrics(results["report"])
+
+    # -------- NEW: write to evaluations.json --------
+    report = results["report"]
+    # Count examples: exclude summary rows
+    num_examples = sum(
+        report[label]["support"]
+        for label in report
+        if label not in ("accuracy", "macro avg", "weighted avg")
+    )
+
+    record = EvaluationRecord(
+        eval_type="intent",
+        name="intent_classification",
+        dataset=args.data,
+        metrics={
+            "accuracy": float(report.get("accuracy", 0.0)),
+            "macro_f1": float(report.get("macro avg", {}).get("f1-score", 0.0)),
+        },
+        num_examples=num_examples,
+        tags=["offline_eval"],
+        notes="sklearn classification report",
+    )
+
+    append_evaluations([record])
+
