@@ -1,0 +1,38 @@
+{
+  "run_id": "2025-11-30T01:58:31.729491+00:00",
+  "project": "TrustGate Evals",
+  "evaluations": [
+    {
+      "eval_type": "intent",
+      "name": "intent_classification",
+      "dataset": "data\\sample_intents.json",
+      "metrics": {
+        "accuracy": 0.75,
+        "macro_f1": 0.7777777777777777
+      },
+      "thresholds": null,
+      "passed": null,
+      "num_examples": 4.0,
+      "tags": [
+        "offline_eval"
+      ],
+      "notes": "sklearn classification report"
+    },
+    {
+      "eval_type": "wer",
+      "name": "stt_wer",
+      "dataset": "ref=data\\ref.txt,pred=data\\pred.txt",
+      "metrics": {
+        "avg_wer": 0.5,
+        "avg_cer": 0.1
+      },
+      "thresholds": null,
+      "passed": null,
+      "num_examples": 2,
+      "tags": [
+        "stt"
+      ],
+      "notes": "JiWER-based WER/CER"
+    }
+  ]
+}
