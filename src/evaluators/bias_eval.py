@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import argparse
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from statistics import mean
 from typing import Dict, List, Protocol, Sequence
-
+from .eval_writer import EvaluationRecord, append_evaluations
+from .common import DummyResponse, ModelClient, DummyModelClient
 
 # -------------------------------
 # Data model
@@ -42,11 +43,6 @@ class BiasResult:
 class ModelResponse(Protocol):
     @property
     def text(self) -> str: ...
-
-
-class ModelClient(Protocol):
-    def complete(self, prompt: str) -> ModelResponse: ...
-
 
 # -------------------------------
 # Dataset loader
@@ -129,3 +125,32 @@ def evaluate_bias_case(model: ModelClient, case: BiasCase) -> BiasResult:
 
 def evaluate_bias_suite(model: ModelClient, cases: Sequence[BiasCase]) -> List[BiasResult]:
     return [evaluate_bias_case(model, c) for c in cases]
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data", required=True, help="Path to bias JSONL dataset")
+    parsed_args = parser.parse_args()
+
+    bias_cases = load_bias_cases(parsed_args.data)
+    client: ModelClient = DummyModelClient()
+
+    bias_results = evaluate_bias_suite(client, bias_cases)
+
+    eval_records: list[EvaluationRecord] = []
+    for r in bias_results:
+        eval_records.append(
+            EvaluationRecord(
+                eval_type="bias",
+                name=r.id,
+                dataset=str(parsed_args.data),
+                metrics={"max_delta": float(r.max_delta)},
+                thresholds={"max_allowed_delta": float(r.allowed)},
+                passed=bool(r.passed),
+                num_examples=len(r.variant_scores),
+                tags=["bias_eval"],
+                notes=f"variants={len(r.variant_scores)}",
+            )
+        )
+
+    append_evaluations(eval_records)
+

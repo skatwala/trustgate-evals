@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import argparse
 import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Protocol, Sequence
+
+from .eval_writer import EvaluationRecord, append_evaluations
+from .common import DummyResponse, ModelClient, DummyModelClient
 
 
 # -------------------------------
@@ -26,7 +30,6 @@ class JudgeResult:
     max_score: float
     explanation: str
 
-
 # -------------------------------
 # Model interface
 # -------------------------------
@@ -36,9 +39,9 @@ class ModelResponse(Protocol):
     def text(self) -> str: ...
 
 
-class ModelClient(Protocol):
-    def complete(self, prompt: str) -> ModelResponse: ...
-
+class JudgeDummyModel(ModelClient):
+    def complete(self, prompt: str) -> DummyResponse:
+        return DummyResponse("SCORE: 5\nEXPLANATION: dummy baseline")
 
 # -------------------------------
 # Dataset loader
@@ -105,3 +108,37 @@ Candidate: {case.candidate}
 
 def evaluate_judge_suite(model: ModelClient, cases: Sequence[JudgeCase]) -> List[JudgeResult]:
     return [evaluate_judge_case(model, c) for c in cases]
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data", required=True, help="Path to judge JSONL dataset")
+    args = parser.parse_args()
+
+    judge_cases = load_judge_cases(args.data)
+    client: ModelClient = JudgeDummyModel()
+
+    judge_results = evaluate_judge_suite(client, judge_cases)
+
+    eval_records: List[EvaluationRecord] = []
+    for case, res in zip(judge_cases, judge_results):
+        norm_score = res.score / res.max_score if res.max_score else 0.0
+
+        eval_records.append(
+            EvaluationRecord(
+                eval_type="judge",
+                name=case.id,
+                dataset=str(args.data),
+                metrics={
+                    "score": float(res.score),
+                    "max_score": float(res.max_score),
+                    "normalized_score": float(norm_score),
+                },
+                thresholds=None,  # can later add required minimum score
+                passed=True,
+                num_examples=1,
+                tags=["judge_eval"],
+                notes=res.explanation,
+            )
+        )
+
+    append_evaluations(eval_records)
